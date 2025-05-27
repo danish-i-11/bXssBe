@@ -4,7 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const Feedback = require('./models/Feedback');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,30 +23,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Routes
-app.post('/api/feedback', async (req, res) => {
-  try {
-    const { name, message } = req.body;
-    if (!name || !message) {
-      return res.status(400).json({ message: 'Name and message are required.' });
-    }
-
-    const newFeedback = new Feedback({ name, message });
-    await newFeedback.save();
-    res.status(201).json({ message: 'Feedback submitted successfully!' });
-  } catch (err) {
-    console.error('POST /api/feedback error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get('/api/getfeedback', async (req, res) => {
-  try {
-    const feedbacks = await Feedback.find().sort({ _id: -1 });
-    res.status(200).json(feedbacks);
-  } catch (err) {
-    console.error('GET /api/getfeedback error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+app.use('/api', feedbackRoutes);
+app.use('/api/auth', authRoutes);
+app.get('/', (req, res) => {
+  res.send('Backend API is running. Use the /api endpoints.');
 });
 
 // Start Server
